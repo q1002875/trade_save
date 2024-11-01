@@ -135,7 +135,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
                       label: Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 32, vertical: 16),
-                        child: (widget.selectRow != null)
+                        child: (widget.selectRow == null)
                             ? const Text('儲存交易紀錄')
                             : const Text('修改交易紀錄'),
                       ),
@@ -519,19 +519,20 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
         if (value == null || value.isEmpty) {
           return '請輸入報酬比';
         }
-        // if (double.tryParse(value) == null) {
-        //   return '請輸入有效數字';
-        // }
+        if (double.tryParse(value) == null) {
+          return '請輸入有效數字';
+        }
         return null;
       },
       onChanged: (value) {
+        _riskRewardController.text = value;
         // 确保输入框文本前面始终带有 "1:"
-        if (!value.startsWith('1:')) {
-          _riskRewardController.text = '1: $value';
-          _riskRewardController.selection = TextSelection.fromPosition(
-            TextPosition(offset: _riskRewardController.text.length),
-          );
-        }
+        // if (!value.startsWith('1:')) {
+        //   _riskRewardController.text = '1: $value';
+        //   _riskRewardController.selection = TextSelection.fromPosition(
+        //     TextPosition(offset: _riskRewardController.text.length),
+        //   );
+        // }
       },
     );
   }

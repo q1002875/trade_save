@@ -52,14 +52,6 @@ class _GSheetsReaderPageState extends State<GSheetsReaderPage> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_isLoading) {
-      _loadGoogleSheetData();
-    }
-  }
-
-  @override
   void dispose() {
     _verticalScrollController.dispose();
     _inputController.dispose();
@@ -187,9 +179,10 @@ class _GSheetsReaderPageState extends State<GSheetsReaderPage> {
 
       // final List<List<String>> normalizedData = normalizeData(values);
       final List<Trade> tradedData = _normalizeData(values);
-      // print('tradedData:$tradedData');
+      final List<Trade> reversedTradedData = tradedData.reversed.toList();
+
       setState(() {
-        _data = tradedData;
+        _data = reversedTradedData;
         // _data = normalizedData;
         _isLoading = false;
       });

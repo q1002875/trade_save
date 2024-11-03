@@ -54,6 +54,10 @@ class TradeDetailPage extends StatelessWidget {
     );
   }
 
+  void initState() {
+    print('TradeDetailPage: init${trade.toString()}');
+  }
+
   Widget _buildAnalysisCard() {
     return Card(
       elevation: 2,
@@ -67,8 +71,8 @@ class TradeDetailPage extends StatelessWidget {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const Divider(),
             _buildDetailRow('進場理由', trade!.entryReason),
-            _buildDetailRow('止損條件', trade!.stopConditions),
-            _buildDetailRow('反思', trade!.reflection),
+            _buildDetailRow('止盈止損條件', trade!.stopConditions),
+            _buildDetailRow('結果復盤心得', trade!.reflection),
           ],
         ),
       ),
@@ -168,7 +172,7 @@ class TradeDetailPage extends StatelessWidget {
             _buildDetailRow('小時段', trade!.smallTimePeriod),
             _buildDetailRow('進場價格', trade!.entryPrice.toString()),
             _buildDetailRow('出場價格', trade!.exitPrice.toString()),
-            _buildDetailRow('風險報酬比', trade!.riskRewardRatio.toString()),
+            _buildDetailRow('風險報酬比', '1:${trade!.riskRewardRatio.toString()}'),
           ],
         ),
       ),

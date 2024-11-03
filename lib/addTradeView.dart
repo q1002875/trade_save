@@ -17,23 +17,35 @@ class TradeJournalEntry extends StatefulWidget {
 }
 
 class _TradeJournalEntryState extends State<TradeJournalEntry> {
-  static const List<String> timeFrameOptions = [
-    '1m',
-    '5m',
-    '15m',
-    '1H',
-    '4H',
-    '1D'
-  ];
   static const List<String> directionOptions = ['多', '空'];
+  static const List<String> timeFrameBigOptions = [
+    '1分鐘',
+    '5分鐘',
+    '15分鐘',
+    '30分鐘',
+    '1小時',
+    '4小時',
+    '1天'
+  ];
+
+  static const List<String> timeFrameSmallOptions = [
+    '1分鐘',
+    '5分鐘',
+    '15分鐘',
+    '30分鐘',
+    '1小時',
+    '4小時',
+    '1天'
+  ];
+
+  String _direction = '多';
+  String _directionBigArea = '15分鐘';
+  String _directionSmallArea = '1分鐘';
+
   final _formKey = GlobalKey<FormState>();
   DateTime _selectedDate = DateTime.now();
   TimeOfDay? _entryTime;
   TimeOfDay? _exitTime;
-  String _direction = '多';
-
-  String _directionBigArea = '1H';
-  String _directionSmallArea = '5m';
 
   final TextEditingController _entryPriceController = TextEditingController();
   final TextEditingController _exitPriceController = TextEditingController();
@@ -52,7 +64,9 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('新增交易紀錄'),
+        title: (widget.selectRow != null)
+            ? const Text('修改交易紀錄')
+            : const Text('新增交易紀錄'),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       ),
       body: GestureDetector(
@@ -129,26 +143,77 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
                   ),
                   const SizedBox(height: 24),
                   Center(
-                    child: ElevatedButton.icon(
-                      onPressed: _submitForm,
-                      icon: const Icon(Icons.save),
-                      label: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 32, vertical: 16),
-                        child: (widget.selectRow == null)
-                            ? const Text('儲存交易紀錄')
-                            : const Text('修改交易紀錄'),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor:
-                            Theme.of(context).colorScheme.onPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (widget.selectRow != null) // 只有在編輯模式才顯示刪除按鈕
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              // 這裡添加刪除確認對話框
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('確認刪除'),
+                                    content: const Text('確定要刪除這筆交易紀錄嗎？'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(),
+                                        child: const Text('取消'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                          // TODO: 在這裡調用刪除方法
+                                          _deleteDataFromSheet(
+                                              widget.selectRow!);
+                                        },
+                                        child: const Text('確定'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                            icon: const Icon(Icons.delete),
+                            label: const Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 32, vertical: 16),
+                              child: Text('刪除交易紀錄'),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(width: 16), // 按鈕之間的間距
+                        ElevatedButton.icon(
+                          onPressed: _submitForm,
+                          icon: const Icon(Icons.save),
+                          label: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 32, vertical: 16),
+                            child: (widget.selectRow == null)
+                                ? const Text('儲存交易紀錄')
+                                : const Text('修改交易紀錄'),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ),
+                  )
                 ],
               ),
             ),
@@ -177,7 +242,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
     super.initState();
     _initializeFields();
 
-    print('add page selectRow${widget.selectRow}');
+    print('add page selectRow${widget.initialTrade.toString()}');
   }
 
   Future<void> _addDataToSheet(String data, int? selectRow) async {
@@ -198,19 +263,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
         // 更新指定行的数据
         // Google Sheets API 的行号从1开始，所以需要 selectRow + 1
         final rowNumber = selectRow + 2;
-
-        // 获取表格的列数
-        final lastColumn = newRow.length;
-
-        // 构建要更新的单元格范围
-        final firstCell = 'A$rowNumber';
-        final lastColumnLetter =
-            String.fromCharCode('A'.codeUnitAt(0) + lastColumn - 1);
-        final lastCell = '$lastColumnLetter$rowNumber';
-
-        // 更新整行数据
         await sheet.values.insertRow(rowNumber, newRow, fromColumn: 1);
-
         // 可选：确保更新成功
         final updatedValues = await sheet.values.row(rowNumber);
         if (updatedValues.length != newRow.length) {
@@ -220,7 +273,6 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
         // 追加新行
         await sheet.values.appendRow(newRow);
       }
-
       // 显示成功消息
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -230,6 +282,8 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
             backgroundColor: Colors.green,
           ),
         );
+        // ignore: use_build_context_synchronously
+        Navigator.popUntil(context, ModalRoute.withName('/'));
       }
     } catch (e) {
       // 错误处理
@@ -412,29 +466,6 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
   }
 
   Widget _buildProfitLossInput() {
-    // return TextFormField(
-    //   controller: _profitLossController,
-    //   decoration: const InputDecoration(
-    //     labelText: '盈虧 (USDT)',
-    //     border: OutlineInputBorder(),
-    //     prefixIcon: Icon(Icons.attach_money),
-    //   ),
-    //   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-    //   validator: (value) {
-    //     if (value == null || value.isEmpty) {
-    //       return '請輸入盈虧金額';
-    //     }
-    //     // 检查输入是否为有效的数字，包括负数
-    //     if (double.tryParse(value) == null) {
-    //       return '請輸入有效數字';
-    //     }
-    //     return null;
-    //   },
-    //   inputFormatters: [
-    //     // 允许输入负号
-    //     FilteringTextInputFormatter.allow(RegExp(r'-?[0-9]+(\.[0-9]+)?')),
-    //   ],
-    // );
     return Row(
       children: [
         // 正负号选择按钮
@@ -526,13 +557,6 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       },
       onChanged: (value) {
         _riskRewardController.text = value;
-        // 确保输入框文本前面始终带有 "1:"
-        // if (!value.startsWith('1:')) {
-        //   _riskRewardController.text = '1: $value';
-        //   _riskRewardController.selection = TextSelection.fromPosition(
-        //     TextPosition(offset: _riskRewardController.text.length),
-        //   );
-        // }
       },
     );
   }
@@ -565,7 +589,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
             prefixIcon: Icon(Icons.short_text),
           ),
           value: _directionBigArea,
-          items: timeFrameOptions.map((String value) {
+          items: timeFrameBigOptions.map((String value) {
             return DropdownMenuItem<String>(
               value: value,
               child: Text(value),
@@ -578,12 +602,6 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
               });
             }
           },
-          validator: (value) {
-            if (value == null || !timeFrameOptions.contains(value)) {
-              return '請選擇有效的時間級別';
-            }
-            return null;
-          },
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
@@ -593,7 +611,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
             prefixIcon: Icon(Icons.short_text),
           ),
           value: _directionSmallArea,
-          items: timeFrameOptions.map((String value) {
+          items: timeFrameSmallOptions.map((String value) {
             return DropdownMenuItem<String>(
               value: value,
               child: Text(value),
@@ -605,12 +623,6 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
                 _directionSmallArea = newValue;
               });
             }
-          },
-          validator: (value) {
-            if (value == null || !timeFrameOptions.contains(value)) {
-              return '請選擇有效的時間級別';
-            }
-            return null;
           },
         ),
       ],
@@ -653,17 +665,63 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
     );
   }
 
+  Future<void> _deleteDataFromSheet(int selectRow) async {
+    try {
+      // 認證
+      final gsheets = GSheets(googleSheetsConfig.credentials);
+      // 使用哪一個 Excel 資料
+      final ss = await gsheets.spreadsheet(googleSheetsConfig.spreadsheetId);
+      final sheet = ss.worksheetByIndex(0);
+
+      if (sheet == null) {
+        throw Exception('找不到工作表');
+      }
+
+      // Google Sheets 的行號從 1 開始，因此 selectRow + 2
+      final rowNumber = selectRow + 2;
+
+      // 刪除指定的行
+      await sheet.deleteRow(rowNumber);
+
+      // 顯示刪除成功的消息
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('成功刪除數據'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+
+      // 刪除後重新加載數據以更新顯示
+      // _loadGoogleSheetData();
+    } catch (e) {
+      // 錯誤處理
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('刪除失敗: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _initializeFields() {
     // Initialize with default values first
     _selectedDate = DateTime.now();
     _direction = directionOptions.first;
-    _directionBigArea = timeFrameOptions[3]; // '1H'
-    _directionSmallArea = timeFrameOptions[1]; // '5m'
+    // _directionBigArea = timeFrameBigOptions.last; // '1H'
+    // _directionSmallArea = timeFrameSmallOptions.first; // '5m'
+
     _isPositive = true;
 
     if (widget.initialTrade != null) {
       final trade = widget.initialTrade!;
+      print(trade.bigTimePeriod);
 
+      print(trade.smallTimePeriod);
       _selectedDate = trade.tradeDate;
       _entryTime = TimeOfDay.fromDateTime(trade.entryTime);
       _exitTime = TimeOfDay.fromDateTime(trade.exitTime);
@@ -672,12 +730,12 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       if (directionOptions.contains(trade.direction)) {
         _direction = trade.direction;
       }
-
-      // Validate time period values exist in options
-      if (timeFrameOptions.contains(trade.bigTimePeriod)) {
+      print(trade.bigTimePeriod);
+      if (timeFrameBigOptions.contains(trade.bigTimePeriod)) {
         _directionBigArea = trade.bigTimePeriod;
       }
-      if (timeFrameOptions.contains(trade.smallTimePeriod)) {
+      print(trade.smallTimePeriod);
+      if (timeFrameSmallOptions.contains(trade.smallTimePeriod)) {
         _directionSmallArea = trade.smallTimePeriod;
       }
 
@@ -697,6 +755,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       }
     } else {
       // Clear all controllers for new entry
+
       _entryPriceController.text = '';
       _exitPriceController.text = '';
       _profitLossController.text = '';
@@ -817,7 +876,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
 
 // ${trade.tradeDate}, ${trade.entryTime}, ${trade.exitTime},
       final tradeString =
-          '$formattedTradeDate,$formattedEntryTime,$formattedExitTime ,${trade.direction}, ${trade.bigTimePeriod}, ${trade.smallTimePeriod}, ${trade.entryPrice}, ${trade.exitPrice}, ${trade.profitLossUSDT},${trade.riskRewardRatio}, ${trade.entryReason}, ${trade.stopConditions}, ${trade.reflection}, ${trade.imageUrl}';
+          '$formattedTradeDate,$formattedEntryTime,$formattedExitTime,${trade.direction},${trade.bigTimePeriod},${trade.smallTimePeriod},${trade.entryPrice},${trade.exitPrice},${trade.profitLossUSDT},${trade.riskRewardRatio},${trade.entryReason},${trade.stopConditions},${trade.reflection},${trade.imageUrl}';
       print(tradeString);
       // TODO: 將trade存儲到數據庫或其他持久化存儲
       // debugPrint('${trade.toJson()}'); // 測試用，打印JSON數據

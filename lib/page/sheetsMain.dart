@@ -10,7 +10,6 @@ class GSheetsReaderPage extends StatefulWidget {
 }
 
 class _GSheetsReaderPageState extends State<GSheetsReaderPage> {
-  // List<List<Trade>> _data = [];
   List<Trade> _data = [];
   bool _isLoading = false;
   String _error = '';
@@ -22,7 +21,7 @@ class _GSheetsReaderPageState extends State<GSheetsReaderPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Google Sheets 讀取器'),
+        title: const Text('Google Excel 交易資料'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -47,9 +46,17 @@ class _GSheetsReaderPageState extends State<GSheetsReaderPage> {
             ? const CircularProgressIndicator()
             : (_data.isNotEmpty
                 ? TradeListView(trades: _data) // 传递 trades 参数
-                : const Text('没有数据可显示')), // 提示没有数据
+                : const Text('無數據顯示 按＋新增交易資料')), // 提示没有数据
       ),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isLoading) {
+      _loadGoogleSheetData();
+    }
   }
 
   @override
@@ -205,15 +212,18 @@ class _GSheetsReaderPageState extends State<GSheetsReaderPage> {
           tradeDate: parseDateTime(row[0], true), // 交易日期
           entryTime: parseDateTime(row[1], false), // 進場時間
           exitTime: parseDateTime(row[2], false), // 出場時間
-          direction: row[3]?.toString() ?? '',
-          bigTimePeriod: row[4]?.toString() ?? '',
-          smallTimePeriod: row[5]?.toString() ?? '',
-          entryPrice: double.tryParse(row[6]?.toString() ?? '0') ?? 0.0,
-          exitPrice: double.tryParse(row[7]?.toString() ?? '0') ?? 0.0,
-          profitLossUSDT: double.tryParse(row[8]?.toString() ?? '0') ?? 0.0,
-          entryReason: row[9]?.toString() ?? '',
-          stopConditions: row[10]?.toString() ?? '',
-          riskRewardRatio: double.tryParse(row[11]?.toString() ?? '0') ?? 0.0,
+          direction: row[3]?.toString() ?? '', //多空方向
+          bigTimePeriod: row[4]?.toString() ?? '', //大時區
+          smallTimePeriod: row[5]?.toString() ?? '', //小時區
+          entryPrice: double.tryParse(row[6]?.toString() ?? '0') ?? 0.0, //進場價
+          exitPrice: double.tryParse(row[7]?.toString() ?? '0') ?? 0.0, //出場價
+          profitLossUSDT:
+              double.tryParse(row[8]?.toString() ?? '0') ?? 0.0, //盈虧
+          riskRewardRatio: double.tryParse(row[9]?.toString() ?? '0') ?? 0.0,
+
+          entryReason: row[10]?.toString() ?? '',
+          stopConditions: row[11]?.toString() ?? '',
+
           reflection: row[12]?.toString() ?? '',
           imageUrl: null, // 圖片URL需要特別處理
         );
@@ -224,8 +234,7 @@ class _GSheetsReaderPageState extends State<GSheetsReaderPage> {
       }
     }).toList();
   }
-
-  // 选择图片
+// 选择图片
   // Future<void> _selectImage() async {
   //   final pickedFile =
   //       await _picker.pickImage(source: ImageSource.gallery); // 从图库选择图片
@@ -237,35 +246,4 @@ class _GSheetsReaderPageState extends State<GSheetsReaderPage> {
   void _showAddDataDialog() {
     Navigator.pushNamed(context, '/tradeJournalEntry');
   }
-
-  // 上传图片到 Google Sheets
-  // Future<void> _uploadImageToSheet(File image) async {
-  //   // 此处逻辑需要实现将图片转换为可以存入 Google Sheets 的格式
-  //   // 你可以选择上传图片到 Google Drive，然后将文件的链接写入 Google Sheets
-  //   // 这里是一个示例，具体实现取决于你的需求
-
-  //   try {
-  //     final gsheets = GSheets(_googleSheetsConfig.credentials);
-  //     final ss = await gsheets.spreadsheet(_googleSheetsConfig.spreadsheetId);
-  //     final sheet = ss.worksheetByIndex(0);
-
-  //     if (sheet == null) {
-  //       throw Exception('找不到工作表');
-  //     }
-
-  //     // 在这里添加将图片上传到 Google Drive 的逻辑，然后获取文件链接
-
-  //     // 假设你获得了文件链接 fileLink
-  //     const fileLink = 'YOUR_IMAGE_FILE_LINK'; // 替换为实际链接
-
-  //     // 将文件链接写入工作表的指定行
-  //     await sheet.values.appendRow([fileLink]); // 在工作表中添加文件链接
-
-  //     _loadGoogleSheetData(); // 重新加载数据以更新显示
-  //   } catch (e) {
-  //     setState(() {
-  //       _error = '上传图片时发生错误: $e';
-  //     });
-  //   }
-  // }
 }

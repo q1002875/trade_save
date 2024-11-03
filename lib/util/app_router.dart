@@ -7,6 +7,9 @@ class AppRouter {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(builder: (_) => const MyApp());
+      case '/tradeListView':
+        return MaterialPageRoute(builder: (_) => const TradeListView());
+
       case '/tradeJournalEntry':
         final args = settings.arguments as TradeArguments;
         return MaterialPageRoute(

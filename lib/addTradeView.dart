@@ -267,7 +267,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
         // 可选：确保更新成功
         final updatedValues = await sheet.values.row(rowNumber);
         if (updatedValues.length != newRow.length) {
-          throw Exception('更新行数据失败');
+          throw Exception('更新失敗');
         }
       } else {
         // 追加新行
@@ -277,13 +277,15 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                selectRow != null ? '成功更新第 ${selectRow + 1} 行数据' : '成功添加新数据'),
+            content: Text(selectRow != null
+                ? '成功更新第 ${selectRow + 1} 行紀錄'
+                : '成功新增一筆交易紀錄'),
             backgroundColor: Colors.green,
           ),
         );
+
         // ignore: use_build_context_synchronously
-        Navigator.popUntil(context, ModalRoute.withName('/'));
+        Navigator.pop(context);
       }
     } catch (e) {
       // 错误处理

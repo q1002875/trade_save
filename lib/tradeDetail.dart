@@ -17,9 +17,6 @@ class TradeDetailPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              // Navigator.pushNamed(context, '/tradeJournalEntry',
-              //     arguments: trade);
-
               Navigator.pushNamed(
                 context,
                 '/tradeJournalEntry',

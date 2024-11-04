@@ -5,12 +5,14 @@ import 'util/common_imports.dart';
 class TradeCard extends StatelessWidget {
   final Trade trade;
   final int selectRow;
+  final int tradeDataLength;
   final VoidCallback onPopCallback;
 
   const TradeCard({
     super.key,
     required this.trade,
     required this.selectRow,
+    required this.tradeDataLength,
     required this.onPopCallback,
   });
 
@@ -18,6 +20,11 @@ class TradeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isProfitable = trade.profitLossUSDT > 0;
+    String formatPrice(double price) {
+      return price == price.roundToDouble()
+          ? price.toInt().toString()
+          : price.toString();
+    }
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6), // 減少垂直邊距
@@ -27,7 +34,10 @@ class TradeCard extends StatelessWidget {
           Navigator.pushNamed(
             context,
             '/tradeDetail',
-            arguments: TradeArguments(trade: trade, selectRow: selectRow),
+            arguments: TradeArguments(
+                trade: trade,
+                selectRow: selectRow,
+                tradeDataLength: tradeDataLength),
           ).then(
               (_) => Future.delayed(const Duration(seconds: 1), onPopCallback));
         },
@@ -65,12 +75,12 @@ class TradeCard extends StatelessWidget {
             ),
 
             // 主要交易信息
+            // 主要交易信息
             Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 12), // 減少垂直 padding
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 children: [
-                  // 價格信息行
+                  // 第一行：進場價格、進場時間、風險報酬比
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -80,62 +90,33 @@ class TradeCard extends StatelessWidget {
                           Text(
                             '進場價格',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 13, // 增加標籤字體
+                              fontSize: 13,
                             ),
                           ),
-                          const SizedBox(height: 2), // 減少間距
+                          const SizedBox(height: 2),
                           Text(
-                            trade.entryPrice.toString(),
+                            formatPrice(trade.entryPrice),
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontSize: 18, // 增加價格字體
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
                       Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            '出場價格',
+                            '進場時間',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 13, // 增加標籤字體
+                              fontSize: 13,
                             ),
                           ),
-                          const SizedBox(height: 2), // 減少間距
+                          const SizedBox(height: 2),
                           Text(
-                            trade.exitPrice.toString(),
+                            DateFormat('HH:mm').format(trade.entryTime),
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontSize: 18, // 增加價格字體
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12), // 減少間距
-
-                  // 獲利和風險比率
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '獲利 USDT',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 13, // 增加標籤字體
-                            ),
-                          ),
-                          const SizedBox(height: 2), // 減少間距
-                          Text(
-                            '${trade.profitLossUSDT > 0 ? '+' : ''}${trade.profitLossUSDT.toStringAsFixed(2)}',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: isProfitable ? Colors.green : Colors.red,
-                              fontSize: 18, // 增加數字字體
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -147,14 +128,14 @@ class TradeCard extends StatelessWidget {
                           Text(
                             '風險報酬比',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 13, // 增加標籤字體
+                              fontSize: 13,
                             ),
                           ),
-                          const SizedBox(height: 2), // 減少間距
+                          const SizedBox(height: 2),
                           Text(
-                            '1:${trade.riskRewardRatio}',
+                            '1:${formatPrice(trade.riskRewardRatio)}',
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontSize: 18, // 增加數字字體
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -162,28 +143,72 @@ class TradeCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
 
-            // 底部時間信息
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 6), // 減少垂直 padding
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '進場: ${DateFormat('HH:mm').format(trade.entryTime)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 12, // 調整時間字體
-                    ),
-                  ),
-                  Text(
-                    '出場: ${DateFormat('HH:mm').format(trade.exitTime)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 12, // 調整時間字體
-                    ),
+                  const SizedBox(height: 12),
+
+                  // 第二行：出場價格、出場時間、獲利USDT
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '出場價格',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            formatPrice(trade.exitPrice),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            '出場時間',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            DateFormat('HH:mm').format(trade.exitTime),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '獲利 USDT',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${trade.profitLossUSDT > 0 ? '+' : ''}${trade.profitLossUSDT.toStringAsFixed(2)}',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: isProfitable ? Colors.green : Colors.red,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),

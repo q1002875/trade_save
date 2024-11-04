@@ -16,6 +16,7 @@ class AppRouter {
           builder: (_) => TradeJournalEntry(
             initialTrade: args.trade,
             selectRow: args.selectRow,
+            tradeDataLength: args.tradeDataLength,
           ),
         );
       case '/tradeDetail':
@@ -24,6 +25,7 @@ class AppRouter {
           builder: (_) => TradeDetailPage(
             trade: args.trade,
             selectRow: args.selectRow,
+            tradeDataLength: args.tradeDataLength,
           ),
         );
       default:
@@ -35,8 +37,8 @@ class AppRouter {
 class TradeArguments {
   final Trade? trade;
   final int? selectRow;
-
-  TradeArguments({this.trade, this.selectRow});
+  final int? tradeDataLength;
+  TradeArguments({this.trade, this.selectRow, this.tradeDataLength});
 }
 
 

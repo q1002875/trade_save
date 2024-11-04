@@ -5,12 +5,34 @@ import 'package:intl/intl.dart';
 
 import 'util/common_imports.dart';
 
+class TimeFrameOption {
+  static const List<String> timeFrameOptions = [
+    '1分鐘',
+    '5分鐘',
+    '15分鐘',
+    '30分鐘',
+    '1小時',
+    '4小時',
+    '1天'
+  ];
+
+  // 獲取小於指定時間級別的選項
+  static List<String> getSmallerTimeFrames(String biggerTimeFrame) {
+    final int index = timeFrameOptions.indexOf(biggerTimeFrame);
+    if (index == -1) return [];
+    return timeFrameOptions.sublist(0, index + 1);
+  }
+}
+
 class TradeJournalEntry extends StatefulWidget {
   final Trade? initialTrade; // Add initial trade parameter
   final int? selectRow;
-
+  final int? tradeDataLength;
   const TradeJournalEntry(
-      {super.key, required this.initialTrade, required this.selectRow});
+      {super.key,
+      required this.initialTrade,
+      required this.selectRow,
+      required this.tradeDataLength});
 
   @override
   _TradeJournalEntryState createState() => _TradeJournalEntryState();
@@ -18,25 +40,6 @@ class TradeJournalEntry extends StatefulWidget {
 
 class _TradeJournalEntryState extends State<TradeJournalEntry> {
   static const List<String> directionOptions = ['多', '空'];
-  static const List<String> timeFrameBigOptions = [
-    '1分鐘',
-    '5分鐘',
-    '15分鐘',
-    '30分鐘',
-    '1小時',
-    '4小時',
-    '1天'
-  ];
-
-  static const List<String> timeFrameSmallOptions = [
-    '1分鐘',
-    '5分鐘',
-    '15分鐘',
-    '30分鐘',
-    '1小時',
-    '4小時',
-    '1天'
-  ];
 
   String _direction = '多';
   String _directionBigArea = '15分鐘';
@@ -146,68 +149,70 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (widget.selectRow != null) // 只有在編輯模式才顯示刪除按鈕
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              // 這裡添加刪除確認對話框
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: const Text('確認刪除'),
-                                    content: const Text('確定要刪除這筆交易紀錄嗎？'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(context).pop(),
-                                        child: const Text('取消'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                          // TODO: 在這裡調用刪除方法
-                                          _deleteDataFromSheet(
-                                              widget.selectRow!);
-                                        },
-                                        child: const Text('確定'),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                            icon: const Icon(Icons.delete),
-                            label: const Padding(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 32, vertical: 16),
-                              child: Text('刪除交易紀錄'),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                        if (widget.selectRow != null)
+                          Flexible(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: const Text('確認刪除'),
+                                      content: const Text('確定要刪除這筆交易紀錄嗎？'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(),
+                                          child: const Text('取消'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                            _deleteDataFromSheet(
+                                                widget.initialTrade!);
+                                          },
+                                          child: const Text('確定'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                              icon: const Icon(Icons.delete),
+                              label: const Padding(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                                child: Text('刪除'),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                             ),
                           ),
-                        const SizedBox(width: 16), // 按鈕之間的間距
-                        ElevatedButton.icon(
-                          onPressed: _submitForm,
-                          icon: const Icon(Icons.save),
-                          label: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 32, vertical: 16),
-                            child: (widget.selectRow == null)
-                                ? const Text('儲存交易紀錄')
-                                : const Text('修改交易紀錄'),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary,
-                            foregroundColor:
-                                Theme.of(context).colorScheme.onPrimary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: ElevatedButton.icon(
+                            onPressed: _submitForm,
+                            icon: const Icon(Icons.save),
+                            label: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                              child: (widget.selectRow == null)
+                                  ? const Text('儲存交易紀錄')
+                                  : const Text('修改'),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.onPrimary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                           ),
                         ),
@@ -245,59 +250,35 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
     print('add page selectRow${widget.initialTrade.toString()}');
   }
 
-  Future<void> _addDataToSheet(String data, int? selectRow) async {
-    final newRow = data.split(',');
-
+  // 新增或更新數據到表格
+  Future<void> _addDataToSheet(String data, Trade? trade) async {
     try {
-      //認證
-      final gsheets = GSheets(googleSheetsConfig.credentials);
-      //使用哪一個excel資料
-      final ss = await gsheets.spreadsheet(googleSheetsConfig.spreadsheetId);
-      final sheet = ss.worksheetByIndex(0);
+      final sheet = await _initGoogleSheet();
+      final newRow = data.split(',');
 
-      if (sheet == null) {
-        throw Exception('找不到工作表');
-      }
-
-      if (selectRow != null) {
-        // 更新指定行的数据
-        // Google Sheets API 的行号从1开始，所以需要 selectRow + 1
-        final rowNumber = selectRow + 2;
+      if (trade?.id != null) {
+        // 更新現有記錄
+        final rowNumber = await _findTradeRow(sheet, trade!.id);
         await sheet.values.insertRow(rowNumber, newRow, fromColumn: 1);
-        // 可选：确保更新成功
+
+        // 驗證更新
         final updatedValues = await sheet.values.row(rowNumber);
         if (updatedValues.length != newRow.length) {
           throw Exception('更新失敗');
         }
+
+        _showMessage('成功更新紀錄');
       } else {
         // 追加新行
         await sheet.values.appendRow(newRow);
+        _showMessage('成功新增一筆交易紀錄');
       }
-      // 显示成功消息
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(selectRow != null
-                ? '成功更新第 ${selectRow + 1} 行紀錄'
-                : '成功新增一筆交易紀錄'),
-            backgroundColor: Colors.green,
-          ),
-        );
 
-        // ignore: use_build_context_synchronously
-        Navigator.pop(context);
+      if (context.mounted) {
+        Navigator.popUntil(context, (route) => route.settings.name == '/');
       }
     } catch (e) {
-      // 错误处理
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('操作失败: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-
+      _showMessage('操作失敗: ${e.toString()}', isError: true);
       setState(() {
         // _error = '寫入數據時發生錯誤: $e';
       });
@@ -512,8 +493,8 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
               return null;
             },
             inputFormatters: [
-              // 允许输入负号
-              FilteringTextInputFormatter.allow(RegExp(r'-?[0-9]+(\.[0-9]+)?')),
+              // 允许输入负号和小数点
+              FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d*')),
             ],
           ),
         ),
@@ -591,7 +572,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
             prefixIcon: Icon(Icons.short_text),
           ),
           value: _directionBigArea,
-          items: timeFrameBigOptions.map((String value) {
+          items: TimeFrameOption.timeFrameOptions.map((String value) {
             return DropdownMenuItem<String>(
               value: value,
               child: Text(value),
@@ -601,6 +582,12 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
             if (newValue != null) {
               setState(() {
                 _directionBigArea = newValue;
+                // 如果當前小時間級別大於新選擇的大時間級別，重置小時間級別
+                final smallerOptions =
+                    TimeFrameOption.getSmallerTimeFrames(newValue);
+                if (!smallerOptions.contains(_directionSmallArea)) {
+                  _directionSmallArea = smallerOptions.last;
+                }
               });
             }
           },
@@ -613,7 +600,8 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
             prefixIcon: Icon(Icons.short_text),
           ),
           value: _directionSmallArea,
-          items: timeFrameSmallOptions.map((String value) {
+          items: TimeFrameOption.getSmallerTimeFrames(_directionBigArea)
+              .map((String value) {
             return DropdownMenuItem<String>(
               value: value,
               child: Text(value),
@@ -667,47 +655,48 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
     );
   }
 
-  Future<void> _deleteDataFromSheet(int selectRow) async {
+  // 從表格刪除數據
+  Future<void> _deleteDataFromSheet(Trade? trade) async {
     try {
-      // 認證
-      final gsheets = GSheets(googleSheetsConfig.credentials);
-      // 使用哪一個 Excel 資料
-      final ss = await gsheets.spreadsheet(googleSheetsConfig.spreadsheetId);
-      final sheet = ss.worksheetByIndex(0);
-
-      if (sheet == null) {
-        throw Exception('找不到工作表');
+      if (trade?.id == null) {
+        throw Exception('無效的交易記錄');
       }
 
-      // Google Sheets 的行號從 1 開始，因此 selectRow + 2
-      final rowNumber = selectRow + 2;
+      final sheet = await _initGoogleSheet();
+      final rowNumber = await _findTradeRow(sheet, trade!.id);
 
-      // 刪除指定的行
       await sheet.deleteRow(rowNumber);
+      _showMessage('成功刪除數據');
 
-      // 顯示刪除成功的消息
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('成功刪除數據'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        Navigator.popUntil(context, (route) => route.settings.name == '/');
       }
-
-      // 刪除後重新加載數據以更新顯示
-      // _loadGoogleSheetData();
     } catch (e) {
-      // 錯誤處理
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('刪除失敗: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+      _showMessage('刪除失敗: ${e.toString()}', isError: true);
+    }
+  }
+
+  // 查找特定 trade 的行號
+  Future<int> _findTradeRow(Worksheet sheet, String tradeId) async {
+    final allRows = await sheet.values.allRows();
+    for (int i = 0; i < allRows.length; i++) {
+      if (allRows[i].length >= 15 && allRows[i][14] == tradeId) {
+        return i + 1; // Google Sheets 行號從1開始
       }
     }
+    throw Exception('找不到對應的交易記錄');
+  }
+
+  // 初始化 Google Sheets
+  Future<Worksheet> _initGoogleSheet() async {
+    final gsheets = GSheets(googleSheetsConfig.credentials);
+    final ss = await gsheets.spreadsheet(googleSheetsConfig.spreadsheetId);
+    final sheet = ss.worksheetByIndex(0);
+
+    if (sheet == null) {
+      throw Exception('找不到工作表');
+    }
+    return sheet;
   }
 
   void _initializeFields() {
@@ -725,6 +714,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
 
       print(trade.smallTimePeriod);
       _selectedDate = trade.tradeDate;
+
       _entryTime = TimeOfDay.fromDateTime(trade.entryTime);
       _exitTime = TimeOfDay.fromDateTime(trade.exitTime);
 
@@ -732,20 +722,24 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       if (directionOptions.contains(trade.direction)) {
         _direction = trade.direction;
       }
-      print(trade.bigTimePeriod);
-      if (timeFrameBigOptions.contains(trade.bigTimePeriod)) {
-        _directionBigArea = trade.bigTimePeriod;
-      }
-      print(trade.smallTimePeriod);
-      if (timeFrameSmallOptions.contains(trade.smallTimePeriod)) {
-        _directionSmallArea = trade.smallTimePeriod;
-      }
+      // print(trade.bigTimePeriod);
+      // if (timeFrameBigOptions.contains(trade.bigTimePeriod)) {
+      //   _directionBigArea = trade.bigTimePeriod;
+      // }
+      // print(trade.smallTimePeriod);
+      // if (timeFrameSmallOptions.contains(trade.smallTimePeriod)) {
+      //   _directionSmallArea = trade.smallTimePeriod;
+      // }
+      _directionBigArea = trade.bigTimePeriod; // 設置為最大時間級別
+      _directionSmallArea = trade.smallTimePeriod; // 設置為最小時間級別
 
       _entryPriceController.text = trade.entryPrice.toString();
       _exitPriceController.text = trade.exitPrice.toString();
 
       _isPositive = trade.profitLossUSDT >= 0;
-      _profitLossController.text = trade.profitLossUSDT.abs().toString();
+      _profitLossController.text = (trade.profitLossUSDT > 0)
+          ? trade.profitLossUSDT.abs().toString()
+          : '-${trade.profitLossUSDT.abs().toString()}';
 
       _riskRewardController.text = trade.riskRewardRatio.toString();
       _entryReasonController.text = trade.entryReason;
@@ -805,6 +799,18 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
           _exitTime = picked;
         }
       });
+    }
+  }
+
+  // 顯示操作結果消息
+  void _showMessage(String message, {bool isError = false}) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: isError ? Colors.red : Colors.green,
+        ),
+      );
     }
   }
 
@@ -878,11 +884,11 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
 
 // ${trade.tradeDate}, ${trade.entryTime}, ${trade.exitTime},
       final tradeString =
-          '$formattedTradeDate,$formattedEntryTime,$formattedExitTime,${trade.direction},${trade.bigTimePeriod},${trade.smallTimePeriod},${trade.entryPrice},${trade.exitPrice},${trade.profitLossUSDT},${trade.riskRewardRatio},${trade.entryReason},${trade.stopConditions},${trade.reflection},${trade.imageUrl}';
+          '$formattedTradeDate,$formattedEntryTime,$formattedExitTime,${trade.direction},${trade.bigTimePeriod},${trade.smallTimePeriod},${trade.entryPrice},${trade.exitPrice},${trade.profitLossUSDT},${trade.riskRewardRatio},${trade.entryReason},${trade.stopConditions},${trade.reflection},${trade.imageUrl},${trade.id}';
       print(tradeString);
       // TODO: 將trade存儲到數據庫或其他持久化存儲
       // debugPrint('${trade.toJson()}'); // 測試用，打印JSON數據
-      _addDataToSheet(tradeString, widget.selectRow);
+      _addDataToSheet(tradeString, widget.initialTrade);
       // 顯示成功消息
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('交易記錄已保存')),

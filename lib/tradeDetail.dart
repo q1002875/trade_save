@@ -5,8 +5,12 @@ import 'package:trade_save/util/app_router.dart';
 class TradeDetailPage extends StatelessWidget {
   final Trade? trade;
   final int? selectRow;
+  final int? tradeDataLength;
   const TradeDetailPage(
-      {super.key, required this.trade, required this.selectRow});
+      {super.key,
+      required this.trade,
+      required this.selectRow,
+      required this.tradeDataLength});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +24,10 @@ class TradeDetailPage extends StatelessWidget {
               Navigator.pushNamed(
                 context,
                 '/tradeJournalEntry',
-                arguments: TradeArguments(trade: trade, selectRow: selectRow),
+                arguments: TradeArguments(
+                    trade: trade,
+                    selectRow: selectRow,
+                    tradeDataLength: tradeDataLength),
               );
             },
           ),
@@ -153,6 +160,12 @@ class TradeDetailPage extends StatelessWidget {
   }
 
   Widget _buildTradeDetailsCard() {
+    String formatPrice(double price) {
+      return price == price.roundToDouble()
+          ? price.toInt().toString()
+          : price.toString();
+    }
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -167,9 +180,10 @@ class TradeDetailPage extends StatelessWidget {
             _buildDetailRow('交易方向', trade!.direction),
             _buildDetailRow('大時段', trade!.bigTimePeriod),
             _buildDetailRow('小時段', trade!.smallTimePeriod),
-            _buildDetailRow('進場價格', trade!.entryPrice.toString()),
-            _buildDetailRow('出場價格', trade!.exitPrice.toString()),
-            _buildDetailRow('風險報酬比', '1:${trade!.riskRewardRatio.toString()}'),
+            _buildDetailRow('進場價格', formatPrice(trade!.entryPrice)),
+            _buildDetailRow('出場價格', formatPrice(trade!.exitPrice)),
+            _buildDetailRow(
+                '風險報酬比', '1:${(formatPrice(trade!.riskRewardRatio))}'),
           ],
         ),
       ),

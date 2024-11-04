@@ -1,5 +1,5 @@
 // google_sheets_service.dart
-import 'util/common_imports.dart';
+import '../util/common_imports.dart';
 
 class GoogleSheetsService {
   final GoogleSheetsConfig config;
@@ -25,7 +25,6 @@ class GoogleSheetsService {
     return values.skip(1).map((row) {
       try {
         return Trade(
-          id: row[0]?.toString() ?? '',
           tradeDate: _parseDateTime(row[0], true), // 交易日期
           entryTime: _parseDateTime(row[1], false), // 進場時間
           exitTime: _parseDateTime(row[2], false), // 出場時間
@@ -42,6 +41,7 @@ class GoogleSheetsService {
           stopConditions: row[11]?.toString() ?? '',
           reflection: row[12]?.toString() ?? '',
           imageUrl: null, // 圖片URL需要特別處理
+          id: row[14]?.toString() ?? '',
         );
       } catch (e) {
         print('行數據解析錯誤: $row');

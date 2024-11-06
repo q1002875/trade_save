@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:trade_save/service/cloudinary_service.dart';
 
 import 'util/common_imports.dart';
 
@@ -60,9 +61,11 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
   final TextEditingController _riskRewardController = TextEditingController();
   final TextEditingController _reflectionController = TextEditingController();
   final TextEditingController _imageUrlController = TextEditingController();
-  File? _selectedImage;
+  XFile? _selectedImage;
   final ImagePicker _picker = ImagePicker();
+  String imageUrl = '';
   final googleSheetsConfig = GoogleSheetsConfig();
+  final cloudinaryService = CloudinaryService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,6 +74,12 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
             ? const Text('修改交易紀錄')
             : const Text('新增交易紀錄'),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _submitForm,
+          ),
+        ],
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
@@ -194,28 +203,28 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
                             ),
                           ),
                         const SizedBox(width: 8),
-                        Flexible(
-                          child: ElevatedButton.icon(
-                            onPressed: _submitForm,
-                            icon: const Icon(Icons.save),
-                            label: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 12),
-                              child: (widget.selectRow == null)
-                                  ? const Text('儲存交易紀錄')
-                                  : const Text('修改'),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primary,
-                              foregroundColor:
-                                  Theme.of(context).colorScheme.onPrimary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ),
+                        // Flexible(
+                        //   child: ElevatedButton.icon(
+                        //     onPressed: _submitForm,
+                        //     icon: const Icon(Icons.save),
+                        //     label: Padding(
+                        //       padding: const EdgeInsets.symmetric(
+                        //           horizontal: 24, vertical: 12),
+                        //       child: (widget.selectRow == null)
+                        //           ? const Text('儲存交易紀錄')
+                        //           : const Text('修改'),
+                        //     ),
+                        //     style: ElevatedButton.styleFrom(
+                        //       backgroundColor:
+                        //           Theme.of(context).colorScheme.primary,
+                        //       foregroundColor:
+                        //           Theme.of(context).colorScheme.onPrimary,
+                        //       shape: RoundedRectangleBorder(
+                        //         borderRadius: BorderRadius.circular(8),
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   )
@@ -250,15 +259,6 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
     print('add page selectRow${widget.initialTrade.toString()}');
   }
 
-  pickAndUploadFile() async {
-    FilePickerResult? result =
-        await FilePicker.platform.pickFiles(type: FileType.image);
-    if (result != null) {
-      File file = File(result.files.single.path!);
-      await PhotosService().uploadPhoto(file: file);
-    }
-  }
-
   // 新增或更新數據到表格
   Future<void> _addDataToSheet(String data, Trade? trade) async {
     try {
@@ -275,7 +275,6 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
         if (updatedValues.length != newRow.length) {
           throw Exception('更新失敗');
         }
-
         _showMessage('成功更新紀錄');
       } else {
         // 追加新行
@@ -284,13 +283,12 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       }
 
       if (context.mounted) {
+        EasyLoading.dismiss();
         Navigator.popUntil(context, (route) => route.settings.name == '/');
       }
     } catch (e) {
-      _showMessage('操作失敗: ${e.toString()}', isError: true);
-      setState(() {
-        // _error = '寫入數據時發生錯誤: $e';
-      });
+      // _showMessage('操作失敗: ${e.toString()}', isError: true);
+      EasyLoading.show(status: '操作失敗: ${e.toString()}');
     }
   }
 
@@ -391,17 +389,26 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // 判断是显示本地图片还是远程图片
           _selectedImage != null
               ? Image.file(
-                  _selectedImage!,
+                  File(_selectedImage!.path), // 将 XFile 转换为 File
                   width: 300,
                   height: 300,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                 )
-              : const Text('尚未選取圖片'),
+              : imageUrl != ''
+                  ? Image.network(
+                      imageUrl,
+                      width: 300,
+                      height: 300,
+                      fit: BoxFit.contain,
+                    )
+                  : const Text('尚未選取圖片'),
+
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: pickAndUploadFile,
+            onPressed: _pickImage, // 选择图片按钮
             child: const Text('從相簿選取圖片'),
           ),
         ],
@@ -709,36 +716,23 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
   }
 
   void _initializeFields() {
-    // Initialize with default values first
     _selectedDate = DateTime.now();
     _direction = directionOptions.first;
-    // _directionBigArea = timeFrameBigOptions.last; // '1H'
-    // _directionSmallArea = timeFrameSmallOptions.first; // '5m'
 
     _isPositive = true;
-
+    imageUrl = '';
     if (widget.initialTrade != null) {
       final trade = widget.initialTrade!;
-      print(trade.bigTimePeriod);
 
-      print(trade.smallTimePeriod);
       _selectedDate = trade.tradeDate;
 
       _entryTime = TimeOfDay.fromDateTime(trade.entryTime);
       _exitTime = TimeOfDay.fromDateTime(trade.exitTime);
 
-      // Validate direction value exists in options
       if (directionOptions.contains(trade.direction)) {
         _direction = trade.direction;
       }
-      // print(trade.bigTimePeriod);
-      // if (timeFrameBigOptions.contains(trade.bigTimePeriod)) {
-      //   _directionBigArea = trade.bigTimePeriod;
-      // }
-      // print(trade.smallTimePeriod);
-      // if (timeFrameSmallOptions.contains(trade.smallTimePeriod)) {
-      //   _directionSmallArea = trade.smallTimePeriod;
-      // }
+
       _directionBigArea = trade.bigTimePeriod; // 設置為最大時間級別
       _directionSmallArea = trade.smallTimePeriod; // 設置為最小時間級別
 
@@ -755,8 +749,8 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       _stopConditionsController.text = trade.stopConditions;
       _reflectionController.text = trade.reflection;
 
-      if (trade.imageUrl != null) {
-        _selectedImage = trade.imageUrl;
+      if (trade.imageUrl != '') {
+        imageUrl = trade.imageUrl!;
       }
     } else {
       // Clear all controllers for new entry
@@ -772,14 +766,17 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
   }
 
   Future<void> _pickImage() async {
-    pickAndUploadFile();
-    // final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final picker = ImagePicker();
+    final XFile? pickedFile =
+        await picker.pickImage(source: ImageSource.gallery);
 
-    // if (pickedFile != null) {
-    //   setState(() {
-    //     _selectedImage = File(pickedFile.path);
-    //   });
-    // }
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = pickedFile; // 更新选中的 XFile
+      });
+    } else {
+      print("未选择图片");
+    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -824,7 +821,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
     }
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('請填寫所有必填欄位')),
@@ -838,6 +835,10 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       );
       return;
     }
+
+    EasyLoading.show(status: '儲存中');
+
+    await _submitUploadImage();
 
     final entryDateTime = DateTime(
       _selectedDate.year,
@@ -873,7 +874,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
         stopConditions: _stopConditionsController.text,
         riskRewardRatio: double.parse(_riskRewardController.text),
         reflection: _reflectionController.text,
-        imageUrl: _selectedImage,
+        imageUrl: imageUrl,
       );
 
       final checkprofitLoss = _isPositive
@@ -894,11 +895,6 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       String formattedExitTime =
           "${exitTime.hour.toString().padLeft(2, '0')}:${exitTime.minute.toString().padLeft(2, '0')}";
 
-      print("Formatted Trade Date: $formattedTradeDate"); // 输出: 2024-11-01
-      print("Formatted Entry Time: $formattedEntryTime"); // 输出: 04:49
-      print("Formatted Exit Time: $formattedExitTime");
-
-// ${trade.tradeDate}, ${trade.entryTime}, ${trade.exitTime},
       final tradeString =
           '$formattedTradeDate,$formattedEntryTime,$formattedExitTime,${trade.direction},${trade.bigTimePeriod},${trade.smallTimePeriod},${trade.entryPrice},${trade.exitPrice},$checkprofitLoss,${trade.riskRewardRatio},${trade.entryReason},${trade.stopConditions},${trade.reflection},${trade.imageUrl},${trade.id}';
       print(tradeString);
@@ -906,14 +902,12 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       // debugPrint('${trade.toJson()}'); // 測試用，打印JSON數據
       _addDataToSheet(tradeString, widget.initialTrade);
       // 顯示成功消息
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('交易記錄已保存')),
-      );
-      // Navigator.of(context).push(
-      //   MaterialPageRoute(
-      //     builder: (context) => TradeDetailPage(trade: trade),
-      //   ),
+
+      // EasyLoading.showSuccess('交易記錄已保存');
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('交易記錄已保存')),
       // );
+
       // 清空表單
       // _clearForm();
     } catch (e) {
@@ -921,6 +915,19 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('保存失敗: ${e.toString()}')),
       );
+    }
+  }
+
+  Future<void> _submitUploadImage() async {
+    if (_selectedImage != null) {
+      // 异步调用上传方法，等待上传完成并返回 URL
+      final String? url = await cloudinaryService.uploadImage(_selectedImage);
+      // 将返回的 URL 赋值给 imageUrl
+      if (url != null) {
+        imageUrl = url; // 更新 imageUrl
+      } else {
+        print('上传失败');
+      }
     }
   }
 }

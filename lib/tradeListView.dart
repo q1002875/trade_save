@@ -55,6 +55,7 @@ class _TradeListViewState extends State<TradeListView> with RouteAware {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _loadGoogleSheetData();
+    EasyLoading.dismiss();
   }
 
   @override
@@ -223,11 +224,11 @@ class _TradeListViewState extends State<TradeListView> with RouteAware {
 
   List<PopupMenuItem<String>> _buildPositionFilterMenuItems(
       BuildContext context) {
-    final items = ['全部', '多倉', '空倉'];
+    final items = ['全部', '多', '空'];
     final icons = {
       '全部': Icons.all_inclusive,
-      '多倉': Icons.trending_up,
-      '空倉': Icons.trending_down,
+      '多': Icons.trending_up,
+      '空': Icons.trending_down,
     };
 
     return items.map((item) {

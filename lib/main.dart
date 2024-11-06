@@ -3,6 +3,23 @@ import 'util/common_imports.dart';
 void main() async {
   await dotenv.load(fileName: ".env");
   runApp(const MyApp());
+  configLoading();
+}
+
+void configLoading() {
+  EasyLoading.instance
+    ..displayDuration = const Duration(milliseconds: 2000)
+    ..indicatorType = EasyLoadingIndicatorType.circle
+    ..loadingStyle = EasyLoadingStyle.dark
+    ..indicatorSize = 45.0
+    ..radius = 10.0
+    ..progressColor = Colors.yellow
+    ..backgroundColor = Colors.green
+    ..indicatorColor = Colors.yellow
+    ..textColor = Colors.yellow
+    ..maskColor = Colors.blue.withOpacity(0.5)
+    ..userInteractions = false
+    ..dismissOnTap = false;
 }
 
 class MyApp extends StatelessWidget {
@@ -18,6 +35,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         initialRoute: '/',
+        builder: EasyLoading.init(),
         onGenerateRoute: AppRouter.generateRoute,
         home: const TradeListView()
         // home: const GoogleSheetsExample(),

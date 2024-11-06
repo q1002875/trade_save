@@ -1,5 +1,3 @@
-import 'dart:io';
-
 class Trade {
   final String id;
   final DateTime tradeDate;
@@ -15,7 +13,7 @@ class Trade {
   final String stopConditions;
   final double riskRewardRatio;
   final String reflection;
-  final File? imageUrl; // 改為 File 類型
+  final String? imageUrl; // 改為 File 類型
 
   Trade({
     required this.id,
@@ -51,7 +49,7 @@ class Trade {
       stopConditions: json['stopConditions'],
       riskRewardRatio: json['riskRewardRatio'].toDouble(),
       reflection: json['reflection'],
-      imageUrl: json['imageUrl'] != null ? File(json['imageUrl']) : null,
+      imageUrl: json['imageUrl'],
     );
   }
 
@@ -70,7 +68,7 @@ class Trade {
     String? stopConditions,
     double? riskRewardRatio,
     String? reflection,
-    File? imageUrl, // 改為 File 類型
+    String? imageUrl, // 改為 File 類型
   }) {
     return Trade(
       id: id ?? this.id,
@@ -107,7 +105,7 @@ class Trade {
       'stopConditions': stopConditions,
       'riskRewardRatio': riskRewardRatio,
       'reflection': reflection,
-      'imageUrl': imageUrl?.path,
+      'imageUrl': imageUrl,
     };
   }
 }

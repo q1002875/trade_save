@@ -1,6 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:trade_save/model/tradeModel.dart';
-import 'package:trade_save/util/app_router.dart';
+import 'util/common_imports.dart';
 
 class TradeDetailPage extends StatelessWidget {
   final Trade? trade;
@@ -48,7 +46,9 @@ class TradeDetailPage extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildAnalysisCard(),
                   const SizedBox(height: 16),
-                  if (trade!.imageUrl != null) _buildImageCard(),
+                  (trade!.imageUrl != '')
+                      ? _buildImageCard(context)
+                      : const SizedBox(),
                 ],
               ),
             ),
@@ -112,29 +112,19 @@ class TradeDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildImageCard() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('圖表記錄',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.file(
-                trade!.imageUrl!,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Widget _buildImageCard(BuildContext context) {
+    return trade?.imageUrl != ''
+        ? GestureDetector(
+            onTap: () {
+              // 点击图片时显示大图
+              ImageCardHelper.showLargeImageDialog(context, trade!.imageUrl!);
+            },
+            child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child:
+                    ImageCardHelper.buildImageCard(context, trade!.imageUrl!)),
+          )
+        : const SizedBox();
   }
 
   Widget _buildTimeCard() {
@@ -228,5 +218,48 @@ class TradeDetailPage extends StatelessWidget {
 
   String _formatTime(DateTime dateTime) {
     return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
+  void _showLargeImageDialog(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 使用 InteractiveViewer 来实现图片的缩放与拖动
+                InteractiveViewer(
+                  panEnabled: true, // 允许拖动
+                  boundaryMargin: const EdgeInsets.all(80), // 边界的额外空间
+                  minScale: 0.1, // 最小缩放比例
+                  maxScale: 2.0, // 最大缩放比例
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain, // 保持比例缩放
+                      width: double.maxFinite,
+                      height: 500, // 放大图的高度
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // 关闭弹窗
+                  },
+                  child: const Text('關閉'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

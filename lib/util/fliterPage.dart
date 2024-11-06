@@ -7,7 +7,8 @@ class TradeFilter {
   String positionFilter;
 
   TradeFilter({
-    this.dateFilter = '今天',
+    //預設值
+    this.dateFilter = '全部',
     this.positionFilter = '全部',
   });
 

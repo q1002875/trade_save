@@ -21,5 +21,6 @@ export 'package:trade_save/tradeListView.dart';
 export 'package:trade_save/util/app_router.dart';
 export 'package:trade_save/util/dotenv.dart';
 export 'package:trade_save/util/fliterPage.dart';
+export 'package:trade_save/util/image_card_help.dart';
 export 'package:trade_save/util/upload_google_photo_service.dart';
 export 'package:uuid/uuid.dart';

@@ -20,7 +20,12 @@
         <string>sms</string>
         <string>https</string>
     </array>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>此應用需要訪問您的相簿以選取照片。</string>
 
+    <key>NSCameraUsageDescription</key>
+    <string>此應用需要使用相機來拍攝照片。</string>
+    
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

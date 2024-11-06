@@ -40,7 +40,7 @@ class GoogleSheetsService {
           entryReason: row[10]?.toString() ?? '',
           stopConditions: row[11]?.toString() ?? '',
           reflection: row[12]?.toString() ?? '',
-          imageUrl: null, // 圖片URL需要特別處理
+          imageUrl: row[13]?.toString(), // 圖片URL需要特別處理
           id: row[14]?.toString() ?? '',
         );
       } catch (e) {

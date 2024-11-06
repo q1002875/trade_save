@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         onGenerateRoute: AppRouter.generateRoute,
         home: const TradeListView()
-        // home: const GSheetsReaderPage(),
+        // home: const GoogleSheetsExample(),
         );
   }
 }

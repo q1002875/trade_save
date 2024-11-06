@@ -1,11 +1,10 @@
-import 'dart:async';
+import 'dart:io';
 
-import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/sheets/v4.dart' as sheets_api;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:gsheets/gsheets.dart' as gsheets;
-import 'package:trade_save/util/dotenv.dart';
+
+import 'util/common_imports.dart';
 
 // 配置類 - 應該移到單獨的配置文件中
 
@@ -20,11 +19,11 @@ class _GoogleSheetsExampleState extends State<GoogleSheetsExample> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: [
       sheets_api.SheetsApi.spreadsheetsScope,
-      'https://www.googleapis.com/auth/drive.file',
+      'https://www.googleapis.com/auth/photoslibrary'
     ],
   );
   final googleSheetsConfig = GoogleSheetsConfig();
-
+  final PhotosService photo = PhotosService();
   GoogleSignInAccount? _user;
   String _message = '';
   bool _isLoading = false;
@@ -54,11 +53,13 @@ class _GoogleSheetsExampleState extends State<GoogleSheetsExample> {
             }
           },
         ),
-        actions: const [
-          // IconButton(
-          //   icon: const Icon(Icons.add),
-          //   onPressed: ,
-          // ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              pickAndUploadFile();
+            },
+          ),
         ],
       ),
       body: _buildBody(),
@@ -76,6 +77,19 @@ class _GoogleSheetsExampleState extends State<GoogleSheetsExample> {
   void initState() {
     super.initState();
     _initGoogleSheets();
+  }
+
+  pickAndUploadFile() async {
+    setState(() {});
+    FilePickerResult? result =
+        await FilePicker.platform.pickFiles(type: FileType.image);
+
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      await PhotosService().uploadPhoto(file: file);
+
+      setState(() {});
+    }
   }
 
   // 構建主體UI

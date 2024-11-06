@@ -250,6 +250,15 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
     print('add page selectRow${widget.initialTrade.toString()}');
   }
 
+  pickAndUploadFile() async {
+    FilePickerResult? result =
+        await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      await PhotosService().uploadPhoto(file: file);
+    }
+  }
+
   // 新增或更新數據到表格
   Future<void> _addDataToSheet(String data, Trade? trade) async {
     try {
@@ -392,7 +401,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
               : const Text('尚未選取圖片'),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: _pickImage,
+            onPressed: pickAndUploadFile,
             child: const Text('從相簿選取圖片'),
           ),
         ],
@@ -763,13 +772,14 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    pickAndUploadFile();
+    // final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
-    }
+    // if (pickedFile != null) {
+    //   setState(() {
+    //     _selectedImage = File(pickedFile.path);
+    //   });
+    // }
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -865,6 +875,12 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
         reflection: _reflectionController.text,
         imageUrl: _selectedImage,
       );
+
+      final checkprofitLoss = _isPositive
+          ? trade.profitLossUSDT
+          : trade.profitLossUSDT > 0
+              ? -trade.profitLossUSDT
+              : trade.profitLossUSDT;
 // 假设 tradeDate 和 entryTime 是 DateTime 对象
       DateTime tradeDate = DateTime.parse('${trade.tradeDate}');
       DateTime entryTime = DateTime.parse('${trade.entryTime}');
@@ -884,7 +900,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
 
 // ${trade.tradeDate}, ${trade.entryTime}, ${trade.exitTime},
       final tradeString =
-          '$formattedTradeDate,$formattedEntryTime,$formattedExitTime,${trade.direction},${trade.bigTimePeriod},${trade.smallTimePeriod},${trade.entryPrice},${trade.exitPrice},${trade.profitLossUSDT},${trade.riskRewardRatio},${trade.entryReason},${trade.stopConditions},${trade.reflection},${trade.imageUrl},${trade.id}';
+          '$formattedTradeDate,$formattedEntryTime,$formattedExitTime,${trade.direction},${trade.bigTimePeriod},${trade.smallTimePeriod},${trade.entryPrice},${trade.exitPrice},$checkprofitLoss,${trade.riskRewardRatio},${trade.entryReason},${trade.stopConditions},${trade.reflection},${trade.imageUrl},${trade.id}';
       print(tradeString);
       // TODO: 將trade存儲到數據庫或其他持久化存儲
       // debugPrint('${trade.toJson()}'); // 測試用，打印JSON數據

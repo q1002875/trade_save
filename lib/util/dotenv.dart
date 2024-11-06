@@ -8,13 +8,15 @@ class GoogleSheetsConfig {
 
   // 定义实例属性
   late final String _spreadsheetId;
-
+  late final String _clientId;
   late final String _credentials;
 
   // 提供一个全局访问点
   factory GoogleSheetsConfig() => _instance;
   // 私有构造函数，确保外部无法直接创建对象
   GoogleSheetsConfig._internal() {
+    _clientId = dotenv.env['CLIENT_ID']!;
+
     _spreadsheetId = dotenv.env['SPREADSHEET_ID']!;
     _credentials = '''
     {
@@ -35,6 +37,8 @@ class GoogleSheetsConfig {
   Map<String, dynamic> get accountCredentials {
     return jsonDecode(_credentials);
   }
+
+  String get clienId => _clientId;
 
   String get credentials => _credentials;
   // getter方法以提供对外访问

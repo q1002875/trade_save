@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:trade_save/service/cloudinary_service.dart';
+import 'package:trade_save/service/cloudinary_service_delete.dart';
 
 import 'util/common_imports.dart';
 
@@ -66,6 +67,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
   String imageUrl = '';
   final googleSheetsConfig = GoogleSheetsConfig();
   final cloudinaryService = CloudinaryService();
+  final cloudinaryDeleteService = CloudinaryDeleteService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -682,6 +684,11 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       final rowNumber = await _findTradeRow(sheet, trade!.id);
 
       await sheet.deleteRow(rowNumber);
+
+      if (trade.imageUrl != '') {
+        await cloudinaryDeleteService.deleteImage(trade.imageUrl!);
+      }
+
       _showMessage('成功刪除數據');
 
       if (context.mounted) {
@@ -926,7 +933,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       if (url != null) {
         imageUrl = url; // 更新 imageUrl
       } else {
-        print('上传失败');
+        print('上傳失敗');
       }
     }
   }

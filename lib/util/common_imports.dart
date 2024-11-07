@@ -3,6 +3,7 @@
 export 'dart:async';
 export 'dart:math';
 
+export 'package:cloudinary_sdk/cloudinary_sdk.dart';
 export 'package:file_picker/file_picker.dart';
 // 通用库的导入引用
 export 'package:flutter/material.dart';

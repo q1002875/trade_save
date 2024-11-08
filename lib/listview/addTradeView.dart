@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:trade_save/service/cloudinary_service.dart';
 import 'package:trade_save/service/cloudinary_service_delete.dart';
 
-import 'util/common_imports.dart';
+import '../util/common_imports.dart';
 
 class TimeFrameOption {
   static const List<String> timeFrameOptions = [
@@ -63,7 +63,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
   final TextEditingController _reflectionController = TextEditingController();
   final TextEditingController _imageUrlController = TextEditingController();
   XFile? _selectedImage;
-  final ImagePicker _picker = ImagePicker();
+
   String imageUrl = '';
   final googleSheetsConfig = GoogleSheetsConfig();
   final cloudinaryService = CloudinaryService();
@@ -76,10 +76,25 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
             ? const Text('修改交易紀錄')
             : const Text('新增交易紀錄'),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        // 设置 AppBar 高度
+        toolbarHeight: 70, // 根据需要调整高度
         actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _submitForm,
+          Padding(
+            padding: const EdgeInsets.only(right: 6), // 添加右侧间距
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // 垂直居中对齐
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.save),
+                  iconSize: 32,
+                  onPressed: _submitForm,
+                ),
+                Text(
+                  (widget.selectRow != null) ? '修改' : '新增',
+                  style: const TextStyle(color: Colors.black), // 字体颜色
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -205,28 +220,6 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
                             ),
                           ),
                         const SizedBox(width: 8),
-                        // Flexible(
-                        //   child: ElevatedButton.icon(
-                        //     onPressed: _submitForm,
-                        //     icon: const Icon(Icons.save),
-                        //     label: Padding(
-                        //       padding: const EdgeInsets.symmetric(
-                        //           horizontal: 24, vertical: 12),
-                        //       child: (widget.selectRow == null)
-                        //           ? const Text('儲存交易紀錄')
-                        //           : const Text('修改'),
-                        //     ),
-                        //     style: ElevatedButton.styleFrom(
-                        //       backgroundColor:
-                        //           Theme.of(context).colorScheme.primary,
-                        //       foregroundColor:
-                        //           Theme.of(context).colorScheme.onPrimary,
-                        //       shape: RoundedRectangleBorder(
-                        //         borderRadius: BorderRadius.circular(8),
-                        //       ),
-                        //     ),
-                        //   ),
-                        // ),
                       ],
                     ),
                   )
@@ -336,6 +329,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
     );
   }
 
+/////////////////////widget///////////////////////////
   Widget _buildDirectionDropdown() {
     return DropdownButtonFormField<String>(
       decoration: InputDecoration(
@@ -673,6 +667,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
     );
   }
 
+/////////////////////widget///////////////////////////
   // 從表格刪除數據
   Future<void> _deleteDataFromSheet(Trade? trade) async {
     try {
@@ -885,10 +880,9 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       );
 
       final checkprofitLoss = _isPositive
-          ? trade.profitLossUSDT
-          : trade.profitLossUSDT > 0
-              ? -trade.profitLossUSDT
-              : trade.profitLossUSDT;
+          ? trade.profitLossUSDT.abs()
+          : -trade.profitLossUSDT.abs();
+
 // 假设 tradeDate 和 entryTime 是 DateTime 对象
       DateTime tradeDate = DateTime.parse('${trade.tradeDate}');
       DateTime entryTime = DateTime.parse('${trade.entryTime}');
@@ -905,8 +899,6 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
       final tradeString =
           '$formattedTradeDate,$formattedEntryTime,$formattedExitTime,${trade.direction},${trade.bigTimePeriod},${trade.smallTimePeriod},${trade.entryPrice},${trade.exitPrice},$checkprofitLoss,${trade.riskRewardRatio},${trade.entryReason},${trade.stopConditions},${trade.reflection},${trade.imageUrl},${trade.id}';
       print(tradeString);
-      // TODO: 將trade存儲到數據庫或其他持久化存儲
-      // debugPrint('${trade.toJson()}'); // 測試用，打印JSON數據
       _addDataToSheet(tradeString, widget.initialTrade);
       // 顯示成功消息
 

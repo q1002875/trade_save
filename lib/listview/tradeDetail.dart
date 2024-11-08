@@ -1,4 +1,4 @@
-import 'util/common_imports.dart';
+import '../util/common_imports.dart';
 
 class TradeDetailPage extends StatelessWidget {
   final Trade? trade;

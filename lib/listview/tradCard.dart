@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-import 'util/common_imports.dart';
+import '../util/common_imports.dart';
 
 class TradeCard extends StatelessWidget {
   final Trade trade;

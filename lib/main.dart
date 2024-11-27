@@ -1,7 +1,12 @@
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:trade_save/kickmouth';
+
 import 'util/common_imports.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('zh', null);
   runApp(const MyApp());
   configLoading();
 }
@@ -37,8 +42,7 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         builder: EasyLoading.init(),
         onGenerateRoute: AppRouter.generateRoute,
-        home: const TradeListView()
-        // home: const GoogleSheetsExample(),
-        );
+        // home: const TradeListView());
+        home: OpenCVExample());
   }
 }

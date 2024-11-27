@@ -55,6 +55,7 @@ dependencies:
   cloudinary_public: ^0.23.1
   cloudinary_sdk: ^5.0.0+1
   icons_launcher: ^3.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

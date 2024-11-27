@@ -1,0 +1,62 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:opencv_4/opencv_4.dart';
+import 'package:opencv_4/factory/core_class.dart';
+
+class OpenCVExample extends StatefulWidget {
+  @override
+  _OpenCVExampleState createState() => _OpenCVExampleState();
+}
+
+class _OpenCVExampleState extends State<OpenCVExample> {
+  File? _image;
+  String? _processedImagePath;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+
+      // 使用 OpenCV 進行灰度轉換
+      final result = await Cv2.cvtColor(
+        pathFrom: pickedFile.path,
+        pathTo: '${pickedFile.path}_gray.png',
+        colorType: ColorConversionCodes.colorBGR2GRAY,
+      );
+
+      setState(() {
+        _processedImagePath = result;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("OpenCV Example")),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            ElevatedButton(
+              onPressed: _pickImage,
+              child: Text("Select Image and Convert to Grayscale"),
+            ),
+            SizedBox(height: 20),
+            if (_image != null) Image.file(_image!),
+            if (_processedImagePath != null) ...[
+              SizedBox(height: 20),
+              Text("Processed Image:"),
+              Image.file(File(_processedImagePath!)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}

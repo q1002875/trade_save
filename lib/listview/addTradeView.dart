@@ -900,15 +900,7 @@ class _TradeJournalEntryState extends State<TradeJournalEntry> {
           '$formattedTradeDate,$formattedEntryTime,$formattedExitTime,${trade.direction},${trade.bigTimePeriod},${trade.smallTimePeriod},${trade.entryPrice},${trade.exitPrice},$checkprofitLoss,${trade.riskRewardRatio},${trade.entryReason},${trade.stopConditions},${trade.reflection},${trade.imageUrl},${trade.id}';
       print(tradeString);
       _addDataToSheet(tradeString, widget.initialTrade);
-      // 顯示成功消息
-
-      // EasyLoading.showSuccess('交易記錄已保存');
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(content: Text('交易記錄已保存')),
-      // );
-
-      // 清空表單
-      // _clearForm();
+      
     } catch (e) {
       // 錯誤處理
       ScaffoldMessenger.of(context).showSnackBar(

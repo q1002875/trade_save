@@ -58,7 +58,8 @@ class TradeCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    DateFormat('yyyy-MM-dd').format(trade.tradeDate),
+                    DateFormat('yyyy-MM-dd (EEEE)', 'zh')
+                        .format(trade.tradeDate),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontSize: 16, // 增加字體大小
                     ),
